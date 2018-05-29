@@ -59,15 +59,6 @@ isCrash tailLocations ( row, col ) =
         || List.member ( row, col ) tailLocations
 
 
-isCrashSet : Set Location -> Location -> Bool
-isCrashSet set location =
-    let
-        list =
-            Set.toList set
-    in
-        isCrash list location
-
-
 isGameOver : Location -> List Location -> Location -> List Location -> Maybe GameOver
 isGameOver playerLocation playerTail enemyLocation enemyTail =
     let
@@ -130,7 +121,7 @@ updateEnemyDirection : CycleHead -> List Location -> Bool -> Float -> Direction
 updateEnemyDirection { location, direction } blockedLocationList randomBool randomFloat =
     let
         doRandomTurn =
-            0.05 > randomFloat
+            0.03 > randomFloat
 
         updateHeadInDirection : Direction -> Location
         updateHeadInDirection =
@@ -174,11 +165,12 @@ updateEnemyDirection { location, direction } blockedLocationList randomBool rand
 
         newDirection =
             case ( canGoStraight, canGoLeft, canGoRight, doRandomTurn ) of
-                -- ( True, True, True, True ) ->
-                --     if randomBool then
-                --         directionLeft
-                --     else
-                --         directionRight
+                ( True, True, True, True ) ->
+                    if randomBool then
+                        directionLeft
+                    else
+                        directionRight
+
                 ( True, True, False, True ) ->
                     directionLeft
 
@@ -190,7 +182,6 @@ updateEnemyDirection { location, direction } blockedLocationList randomBool rand
 
                 ( False, True, True, _ ) ->
                     let
-                        -- flood fill > locationOnLeft and locationOnRight
                         ( leftSize, rightSize ) =
                             leftAndRightArea locationOnLeft locationOnRight (location :: blockedLocationList)
 
@@ -228,42 +219,101 @@ updateEnemyDirection { location, direction } blockedLocationList randomBool rand
 leftAndRightArea : Location -> Location -> List Location -> ( Int, Int )
 leftAndRightArea locationLeft locationRight blockedList =
     let
-        blockedSet =
-            blockedList
-                |> Set.fromList
+        newLeft =
+            List.singleton locationLeft
 
-        movesLeft =
-            possibleMoves blockedSet locationLeft
+        visitedLeft =
+            []
 
-        movesRight =
-            possibleMoves blockedSet locationRight
+        newRight =
+            List.singleton locationRight
 
-        debug =
-            ( movesLeft, movesRight )
-                |> toString
-                |> Debug.log "moves"
+        visitedRight =
+            []
+
+        (movesLeft, movesRight) =
+            recursiveLeftAndRightArea
+                blockedList
+                newLeft
+                visitedLeft
+                newRight
+                visitedRight
+
     in
         ( Set.size movesLeft, Set.size movesRight )
 
+recursiveLeftAndRightArea : List Location -> List Location -> List (List Location) -> List Location -> List (List Location) -> (Set Location, Set Location)
+recursiveLeftAndRightArea blocked movesLeft visitedLeft movesRight visitedRight =
+    let
+        concatToUniqueList =
+            List.concat >> Set.fromList >> Set.toList
 
-possibleMoves : Set Location -> Location -> Set Location
-possibleMoves blockedSet location =
+        blockedVisitedLeftList =
+            concatToUniqueList (blocked :: visitedLeft)
+
+        newMovesLeft =
+            movesLeft
+                |> List.map (possibleMoves blockedVisitedLeftList)
+                |> concatToUniqueList
+
+        blockedVisitedRightList =
+            concatToUniqueList (blocked :: visitedRight)
+
+        newMovesRight =
+            movesRight
+                |> List.map (possibleMoves blockedVisitedRightList)
+                |> concatToUniqueList
+
+        newVisitedLeft =
+            movesLeft :: visitedLeft
+
+        newVisitedRight =
+            movesRight :: visitedRight
+
+        newMovesLeftSet =
+            Set.fromList newMovesLeft
+
+        newMovesRightSet =
+            Set.fromList newMovesRight
+    in
+        if (List.isEmpty newMovesLeft) then
+            (Set.empty, Set.singleton (0, 0))
+        else if (List.isEmpty newMovesRight) then
+            (Set.singleton (0, 0), Set.empty)
+        else if (not <| Set.isEmpty <| Set.intersect newMovesLeftSet newMovesRightSet)
+            || List.length newVisitedLeft > 20
+            || List.length newVisitedRight > 20 then
+            (newVisitedLeft, newVisitedRight)
+                |> Tuple.mapFirst (List.concat >> Set.fromList)
+                |> Tuple.mapSecond (List.concat >> Set.fromList)
+
+        else
+            recursiveLeftAndRightArea
+                blocked
+                newMovesLeft
+                newVisitedLeft
+                newMovesRight
+                newVisitedRight
+
+
+
+possibleMoves : List Location -> Location -> List Location
+possibleMoves blockedList location =
     let
         addToLocation =
             tupleSum location
 
         moves =
             [ ( 0, 1 ), ( 0, -1 ), ( 1, 0 ), ( -1, 0 ) ]
-                |> Set.fromList
-                |> Set.map addToLocation
+                |> List.map addToLocation
 
         availableLocations =
-            isCrashSet blockedSet
+            isCrash blockedList
                 >> not
 
         possibleMoves =
             moves
-                |> Set.filter (availableLocations)
+                |> List.filter availableLocations
     in
         possibleMoves
 

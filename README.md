@@ -1,6 +1,6 @@
-# Snake Game
+# Light Cycle Game
 
-Snake game implemented with Elm.
+Light Cycle game implemented with Elm.
 
 # Info about Create Elm App
 

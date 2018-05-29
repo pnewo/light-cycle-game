@@ -1,0 +1,64 @@
+html {
+    font-size: 15px;
+}
+
+body {
+  font-family: 'Source Sans Pro', 'Trebuchet MS', 'Lucida Grande', 'Bitstream Vera Sans', 'Helvetica Neue', sans-serif;
+  margin: 0;
+  text-align: center;
+  color: #293c4b;
+}
+
+h1 {
+  font-size: 2rem;
+}
+
+img {
+  margin: 20px 0;
+  max-width: 200px;
+}
+
+.game-area {
+}
+
+.game-area__row {
+    display: flex;
+    justify-content: center;
+}
+
+.game-area__cell,
+.game-area__cell--cycle-tail,
+.game-area__cell--cycle-head,
+.game-area__cell--enemy-cycle-head,
+.game-area__cell--enemy-cycle-tail {
+    background-color: #EEE;
+    width:  1rem;
+    height: 1rem;
+}
+
+.game-area__cell--cycle-head {
+    background-color: #09F;
+}
+
+.game-area__cell--cycle-tail {
+    background-color: #5EF;
+}
+
+.game-area__cell--enemy-cycle-head {
+    background-color: #F80;
+}
+
+.game-area__cell--enemy-cycle-tail {
+    background-color: #FE5;
+}
+
+.game-area__row:nth-child(odd)
+.game-area__cell:nth-child(odd),
+.game-area__row:nth-child(even)
+.game-area__cell:nth-child(even) {
+    background-color: #E6E6E6;
+}
+
+.total-moves {
+    font-size: 2rem;
+}

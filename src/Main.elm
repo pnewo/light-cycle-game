@@ -1,7 +1,7 @@
 module Main exposing (..)
 
-import Time exposing (Time, millisecond)
 import Keyboard exposing (KeyCode)
+import AnimationFrame
 import Random
 import Html exposing (Html, text, div, h1, img)
 import Html.Attributes exposing (src)
@@ -15,6 +15,11 @@ import Types.Cycle exposing (CycleHead)
 
 
 ---- MODEL ----
+
+
+gameTick : Float
+gameTick =
+    250
 
 
 storedScoresAmount : Int
@@ -51,6 +56,7 @@ initModel =
     , score = 0
     , topScores = List.repeat storedScoresAmount 0
     , gameResult = ""
+    , elapsedFromTick = 1
     }
 
 
@@ -68,6 +74,24 @@ init =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        AnimationTick time ->
+            let
+                elapsed =
+                    model.elapsedFromTick + time
+
+                ( newElapsed, command ) =
+                    if (elapsed) >= gameTick then
+                        ( 0, Random.generate RandomFloat Random.bool )
+                    else
+                        ( elapsed, Cmd.none )
+
+                newModel =
+                    { model
+                        | elapsedFromTick = newElapsed
+                    }
+            in
+                ( newModel, command )
+
         RandomBool _ ->
             ( model
             , Random.generate RandomFloat Random.bool
@@ -139,11 +163,22 @@ update msg model =
 
                 isMaybeGameOver =
                     isGameOver newLocation newTail newEnemyLocation newEnemyTail
+
+                newScore =
+                    case isMaybeGameOver of
+                        Just Win ->
+                            model.score + 1000
+
+                        Just Draw ->
+                            model.score + 500
+
+                        _ ->
+                            model.score + 1
             in
                 case isMaybeGameOver of
                     Just result ->
                         ( { initModel
-                            | topScores = updateTopScores model.topScores model.score
+                            | topScores = updateTopScores model.topScores newScore
                             , gameResult = toString result
                           }
                         , Cmd.none
@@ -154,7 +189,7 @@ update msg model =
                             | cycle = newCycle
                             , enemyCycle = newEnemy
                             , turnBuffer = newTurnBuffer
-                            , score = model.score + 1
+                            , score = newScore
                           }
                         , Cmd.none
                         )
@@ -220,7 +255,7 @@ subscriptions model =
             if model.paused then
                 [ Sub.none ]
             else
-                [ Time.every (250 * millisecond) RandomBool
+                [ AnimationFrame.diffs AnimationTick
                 , Keyboard.downs key
                 ]
     in

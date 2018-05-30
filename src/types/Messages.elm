@@ -9,4 +9,5 @@ type Msg
     | Paused
     | RandomBool Time
     | RandomFloat Bool
+    | AnimationTick Time
     | NoOp

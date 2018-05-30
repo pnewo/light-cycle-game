@@ -1,6 +1,7 @@
 module Types.Model exposing (..)
 
 import Types.Cycle exposing (Cycle)
+import Time exposing (Time)
 
 
 type alias Model =
@@ -11,4 +12,5 @@ type alias Model =
     , score : Int
     , topScores : List Int
     , gameResult : String
+    , elapsedFromTick : Time
     }

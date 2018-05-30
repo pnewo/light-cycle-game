@@ -184,16 +184,6 @@ updateEnemyDirection { location, direction } blockedLocationList randomBool rand
                     let
                         ( leftSize, rightSize ) =
                             leftAndRightArea locationOnLeft locationOnRight (location :: blockedLocationList)
-
-                        debug =
-                            ( leftSize, rightSize )
-                                |> toString
-                                |> Debug.log "left - right"
-
-                        debugbool =
-                            randomBool
-                                |> toString
-                                |> Debug.log "random"
                     in
                         if leftSize > rightSize then
                             directionLeft
@@ -231,18 +221,18 @@ leftAndRightArea locationLeft locationRight blockedList =
         visitedRight =
             []
 
-        (movesLeft, movesRight) =
+        ( movesLeft, movesRight ) =
             recursiveLeftAndRightArea
                 blockedList
                 newLeft
                 visitedLeft
                 newRight
                 visitedRight
-
     in
         ( Set.size movesLeft, Set.size movesRight )
 
-recursiveLeftAndRightArea : List Location -> List Location -> List (List Location) -> List Location -> List (List Location) -> (Set Location, Set Location)
+
+recursiveLeftAndRightArea : List Location -> List Location -> List (List Location) -> List Location -> List (List Location) -> ( Set Location, Set Location )
 recursiveLeftAndRightArea blocked movesLeft visitedLeft movesRight visitedRight =
     let
         concatToUniqueList =
@@ -277,16 +267,19 @@ recursiveLeftAndRightArea blocked movesLeft visitedLeft movesRight visitedRight 
             Set.fromList newMovesRight
     in
         if (List.isEmpty newMovesLeft) then
-            (Set.empty, Set.singleton (0, 0))
+            ( Set.empty, Set.singleton ( 0, 0 ) )
         else if (List.isEmpty newMovesRight) then
-            (Set.singleton (0, 0), Set.empty)
-        else if (not <| Set.isEmpty <| Set.intersect newMovesLeftSet newMovesRightSet)
-            || List.length newVisitedLeft > 20
-            || List.length newVisitedRight > 20 then
-            (newVisitedLeft, newVisitedRight)
+            ( Set.singleton ( 0, 0 ), Set.empty )
+        else if
+            (not <| Set.isEmpty <| Set.intersect newMovesLeftSet newMovesRightSet)
+                || List.length newVisitedLeft
+                > 20
+                || List.length newVisitedRight
+                > 20
+        then
+            ( newVisitedLeft, newVisitedRight )
                 |> Tuple.mapFirst (List.concat >> Set.fromList)
                 |> Tuple.mapSecond (List.concat >> Set.fromList)
-
         else
             recursiveLeftAndRightArea
                 blocked
@@ -294,7 +287,6 @@ recursiveLeftAndRightArea blocked movesLeft visitedLeft movesRight visitedRight 
                 newVisitedLeft
                 newMovesRight
                 newVisitedRight
-
 
 
 possibleMoves : List Location -> Location -> List Location
